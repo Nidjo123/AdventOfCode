@@ -88,14 +88,16 @@ char* MD5(char* msg, char* digest_p) {
 	_msg = preprocess(msg);
 	
 	if (_msg == NULL)  {
-		free(digest);
 		return NULL;
 	}
 	
 	if (digest_p != NULL) {
 		digest = malloc(DIGEST_LENGTH * sizeof(char));
 		
-		if (digest == NULL) return NULL;
+		if (digest == NULL) {
+			free(_msg);
+			return NULL;
+		}
 	}
 	
 	// calculate digest
