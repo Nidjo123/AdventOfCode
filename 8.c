@@ -16,8 +16,6 @@ int isHexDigit(char c) {
 		}
 	}
 	
-	printf("%c nije hex!\n", c);
-	
 	return 0;
 }
 
@@ -68,15 +66,12 @@ int getUnencodedLength(char* s) {
 
 int getEncodedLength(char* s) {
 	int i, len = strlen(s);
-	int res = 0;
+	int res = len;
 	
 	for (i = 0; i < len; i++) {
-		if (s[i] == '\\') {
-			res++;
-		} else if (s[i] == '"') {
+		if (s[i] == '\\' || s[i] == '"') {
 			res++;
 		}
-		res++;
 	}
 	
 	return res + 2; // 2 * "
