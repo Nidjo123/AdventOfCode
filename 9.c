@@ -2,7 +2,6 @@
 #include <string.h>
 
 #define MAXNAME 20
-#define MAXCONS 20
 #define MAXLOCATIONS 20
 
 typedef struct Location_str {
@@ -11,7 +10,7 @@ typedef struct Location_str {
 	struct Connection {
 		struct Location_str* location;
 		int distance;
-	} connections[MAXCONS];
+	} connections[MAXLOCATIONS];
 } Location;
 
 Location locations[MAXLOCATIONS];
