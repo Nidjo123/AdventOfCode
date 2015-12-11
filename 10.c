@@ -68,7 +68,8 @@ void appendString(String* dest, String* src) {
 }
 
 void appendChars(String* dest, char s[]) {
-	String tmp = *dest;
+	int len = strlen(s);
+	String tmp = {s, len, len};
 	appendString(dest, &tmp);
 }
 
@@ -98,7 +99,7 @@ void appendDigits(String* s, int count, char digit) {
 }
 
 void next(String* s) {
-	int i, count, len =s->length;
+	int i, count, len = s->length;
 	String tmp = newString(len + 1);
 	char digit;
 	
