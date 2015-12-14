@@ -18,14 +18,12 @@ int get_index_for(char* name) {
 			return i;
 	}
 	
-	guest_count;
-	
 	strcpy(names[guest_count], name);
 	
 	return guest_count++;
 }
 
-int combination[MAXN] = {-1};
+int combination[MAXN];
 int is_taken(int x, int level) {
 	int i;
 	
