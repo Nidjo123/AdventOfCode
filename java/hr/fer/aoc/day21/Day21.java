@@ -42,7 +42,8 @@ public class Day21 {
 			}
 		} else if (level == 2) {
 			// generate rings
-			for (String ringPair : generatePairs(Shop.getAvailableRings().size())) {
+			Set<String> pairs = generatePairs(Shop.getAvailableRings().size());
+			for (String ringPair : pairs) {
 				res.add(setup + ringPair);
 			}
 		}
@@ -63,8 +64,6 @@ public class Day21 {
 		Set<String> setups = generateSetups("", 0, new HashSet<String>());
 
 		for (String setup : setups) {
-			System.out.println(setup);
-
 			int weaponIndex = Integer.parseInt(setup.substring(0, 1)) - 1;
 			int armorIndex = Integer.parseInt(setup.substring(1, 2)) - 1;
 			int ring1Index = Integer.parseInt(setup.substring(2, 3)) - 1;
@@ -82,10 +81,8 @@ public class Day21 {
 				shop.buyRing(rings.get(ring2Index), game.getPlayer());
 
 			if (game.play() == Winner.PLAYER) {
-				System.out.println("Player won! Gold spent: " + shop.getGoldSpent());
 				minGoldSpentAndWon = Math.min(minGoldSpentAndWon, shop.getGoldSpent());
 			} else {
-				System.out.println("Boss won! :(");
 				maxGoldSpentAndLost = Math.max(maxGoldSpentAndLost, shop.getGoldSpent());
 			}
 

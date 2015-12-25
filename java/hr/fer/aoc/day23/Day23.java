@@ -75,6 +75,7 @@ public class Day23 {
 		return instructions;
 	}
 
+	// notice: works for perfectly formatted assembly so be pedantic! ;)
 	public static void main(String[] args) throws IOException, URISyntaxException {
 		Processor processor = new Processor();
 
@@ -84,6 +85,7 @@ public class Day23 {
 		try {
 			processor.start();
 		} catch (MemoryException e) {
+			System.out.println("First part (register A initially 0):");
 			processor.dump();
 		}
 
@@ -94,6 +96,7 @@ public class Day23 {
 		try {
 			processor.start();
 		} catch (MemoryException e) {
+			System.out.println("Second part (register A initially 1):");
 			processor.dump();
 		}
 	}

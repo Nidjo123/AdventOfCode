@@ -1,7 +1,6 @@
 package hr.fer.aoc.day21.items;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,7 +11,7 @@ public class Shop {
 	private static Map<String, Item> armor = new HashMap<>();
 	private static Map<String, Item> rings = new HashMap<>();
 
-	{
+	static {
 		addWeapon(new Item("Dagger", 8, 4, 0));
 		addWeapon(new Item("Shortsword", 10, 5, 0));
 		addWeapon(new Item("Warhammer", 25, 6, 0));
@@ -34,14 +33,6 @@ public class Shop {
 	}
 
 	private int goldSpent;
-
-	public Shop() {
-		fillShop();
-	}
-
-	private void fillShop() {
-
-	}
 
 	public static void addWeapon(Item weapon) {
 		weapons.put(weapon.getName(), weapon);
