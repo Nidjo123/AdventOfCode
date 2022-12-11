@@ -6,7 +6,19 @@ import java.io.IOException;
 import java.util.List;
 
 public class Main {
-    static Solution[] solutions = {new Day01(), new Day02(), new Day03(), new Day04(), new Day05(), new Day06(), new Day07(), new Day08(), new Day09(), new Day10(),};
+    static Solution[] solutions = {
+            new Day01(),
+            new Day02(),
+            new Day03(),
+            new Day04(),
+            new Day05(),
+            new Day06(),
+            new Day07(),
+            new Day08(),
+            new Day09(),
+            new Day10(),
+            new Day11(),
+    };
 
     public static void main(String[] args) throws IOException {
         for (int i = 0; i < solutions.length; i++) {
