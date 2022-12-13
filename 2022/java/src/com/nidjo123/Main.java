@@ -18,6 +18,7 @@ public class Main {
             new Day09(),
             new Day10(),
             new Day11(),
+            new Day12(),
     };
 
     public static void main(String[] args) throws IOException {
