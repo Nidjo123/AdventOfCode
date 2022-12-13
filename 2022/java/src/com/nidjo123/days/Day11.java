@@ -2,6 +2,7 @@ package com.nidjo123.days;
 
 import com.nidjo123.Day;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,13 +13,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Day11 extends Day {
-    private record Item(long worry) {
+    private record Item(BigInteger worry) {
     }
 
     private static class Monkey {
         private final List<Item> items = new ArrayList<>();
-        private Function<Long, Long> expression;
-        private Predicate<Long> test;
+        private Function<BigInteger, BigInteger> expression;
+        private Function<BigInteger, BigInteger> nextValueGetter;
+        private Predicate<BigInteger> test;
         private Monkey nextFalse;
         private Monkey nextTrue;
         private int inspectionCount = 0;
@@ -28,12 +30,16 @@ public class Day11 extends Day {
             items.add(item);
         }
 
-        public void setExpression(Function<Long, Long> expression) {
+        public void setExpression(Function<BigInteger, BigInteger> expression) {
             assert this.expression == null;
             this.expression = expression;
         }
 
-        public void setTest(Predicate<Long> test) {
+        public void setNextValueGetter(Function<BigInteger, BigInteger> nextValueGetter) {
+            this.nextValueGetter = nextValueGetter;
+        }
+
+        public void setTest(Predicate<BigInteger> test) {
             assert this.test == null;
             this.test = test;
         }
@@ -50,7 +56,7 @@ public class Day11 extends Day {
 
         public void inspectItems() {
             for (Item item : items) {
-                long newWorry = expression.apply(item.worry) / 3;
+                BigInteger newWorry = nextValueGetter.apply(expression.apply(item.worry));
                 Item newItem = new Item(newWorry);
                 if (test.test(newWorry)) {
                     nextTrue.addItem(newItem);
@@ -68,20 +74,21 @@ public class Day11 extends Day {
     }
 
     private final List<Monkey> monkeys = new ArrayList<>();
+    private long commonMultiple;
     private static final Pattern MONKEY_BEGIN = Pattern.compile("Monkey \\d+:");
     private static final Pattern MONKEY_ITEMS = Pattern.compile("\\s*Starting items: ([\\d,\\s]+)");
     private static final Pattern WORRY_EXPR = Pattern.compile("\\s*Operation: new\\s*=\\s*(.+)");
     private static final Pattern TEST_EXPR = Pattern.compile("\\s*Test: divisible by (\\d+)");
     private static final Pattern DECISION = Pattern.compile("\\s*If (true|false): throw to monkey (\\d+)");
 
-    private static Function<Long, Long> exprFromString(String expr) {
+    private static Function<BigInteger, BigInteger> exprFromString(String expr) {
         String[] parts = expr.split("\\s+");
         assert parts.length == 3 && parts[0].equals("old");
         String operator = parts[1];
         String operand = parts[2];
         return switch (operator) {
-            case "+" -> (x) -> x + (operand.equals("old") ? x : Long.parseLong(operand));
-            case "*" -> (x) -> x * (operand.equals("old") ? x : Long.parseLong(operand));
+            case "+" -> (x) -> x.add(operand.equals("old") ? x : BigInteger.valueOf(Long.parseLong(operand)));
+            case "*" -> (x) -> x.multiply(operand.equals("old") ? x : BigInteger.valueOf(Long.parseLong(operand)));
             default -> throw new RuntimeException("cannot parse expression: " + expr);
         };
     }
@@ -90,6 +97,7 @@ public class Day11 extends Day {
     public void init() {
         super.init();
 
+        commonMultiple = 1;
         Monkey monkey = null;
         Map<Monkey, Integer> nextMonkeyIfTrue = new HashMap<>();
         Map<Monkey, Integer> nextMonkeyIfFalse = new HashMap<>();
@@ -114,7 +122,7 @@ public class Day11 extends Day {
             if (monkeyItemsMatcher.matches()) {
                 String items = monkeyItemsMatcher.group(1);
                 for (String item : items.split("\\s*,\\s*")) {
-                    int worry = Integer.parseInt(item);
+                    BigInteger worry = BigInteger.valueOf(Integer.parseInt(item));
                     monkey.addItem(new Item(worry));
                 }
                 continue;
@@ -130,7 +138,8 @@ public class Day11 extends Day {
             Matcher testExprMatcher = TEST_EXPR.matcher(line);
             if (testExprMatcher.matches()) {
                 int divisor = Integer.parseInt(testExprMatcher.group(1));
-                monkey.setTest((x) -> x % divisor == 0);
+                commonMultiple *= divisor;
+                monkey.setTest((x) -> x.mod(BigInteger.valueOf(divisor)).equals(BigInteger.ZERO));
                 continue;
             }
 
@@ -162,26 +171,41 @@ public class Day11 extends Day {
         }
     }
 
-    private void doRound() {
-        for (Monkey monkey : monkeys) {
-            monkey.inspectItems();
+    private void doRounds(int rounds) {
+        for (int round = 0; round < rounds; round++) {
+            for (Monkey monkey : monkeys) {
+                monkey.inspectItems();
+            }
         }
+    }
+
+    private long getMonkeyBusiness() {
+        long[] inspectionCounts = monkeys.stream().mapToLong(Monkey::getInspectionCount).sorted().toArray();
+        int size = inspectionCounts.length;
+        return inspectionCounts[size - 1] * inspectionCounts[size - 2];
+    }
+
+    private void resetMonkeys() {
+        monkeys.clear();
+        init();
     }
 
     @Override
     public void part1() {
-        final int ROUNDS = 20;
-        for (int i = 0; i < ROUNDS; i++) {
-            doRound();
+        for (Monkey monkey : monkeys) {
+            monkey.setNextValueGetter(x -> x.divide(BigInteger.valueOf(3)));
         }
-        List<Integer> inspectionCounts = monkeys.stream().map(Monkey::getInspectionCount).sorted().toList();
-        int size = inspectionCounts.size();
-        int res = inspectionCounts.get(size - 1) * inspectionCounts.get(size - 2);
-        System.out.println(res);
+        doRounds(20);
+        System.out.println(getMonkeyBusiness());
     }
 
     @Override
     public void part2() {
-
+        resetMonkeys();
+        for (Monkey monkey : monkeys) {
+            monkey.setNextValueGetter(x -> x.remainder(BigInteger.valueOf(commonMultiple)));
+        }
+        doRounds(10_000);
+        System.out.println(getMonkeyBusiness());
     }
 }
