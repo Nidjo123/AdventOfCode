@@ -20,6 +20,7 @@ public class Main {
             new Day11(),
             new Day12(),
             new Day13(),
+            new Day14(),
     };
 
     public static void main(String[] args) throws IOException {
