@@ -6,25 +6,11 @@ import java.io.IOException;
 import java.util.List;
 
 public class Main {
-    static Solution[] solutions = {
-            new Day01(),
-            new Day02(),
-            new Day03(),
-            new Day04(),
-            new Day05(),
-            new Day06(),
-            new Day07(),
-            new Day08(),
-            new Day09(),
-            new Day10(),
-            new Day11(),
-            new Day12(),
-            new Day13(),
-            new Day14(),
-    };
+    static Solution[] solutions = {new Day01(), new Day02(), new Day03(), new Day04(), new Day05(), new Day06(), new Day07(), new Day08(), new Day09(), new Day10(), new Day11(), new Day12(), new Day13(), new Day14(), new Day15(),};
 
     public static void main(String[] args) throws IOException {
         for (int i = 0; i < solutions.length; i++) {
+            if (i != 14) continue;
             System.out.println("== Day " + (i + 1) + " ==");
             List<String> lines = Utils.readInputForDay(i + 1);
             Solution solution = solutions[i];
