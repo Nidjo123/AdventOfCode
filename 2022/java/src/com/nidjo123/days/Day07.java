@@ -18,7 +18,7 @@ class File {
     }
 
     public File(File parent, String name, int size) {
-        assert size > 0;
+        assert size >= 0;
         this.parent = parent;
         this.name = name;
         this.size = size;
