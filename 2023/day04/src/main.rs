@@ -9,6 +9,7 @@ fn main() {
     let input = fs::read_to_string("src/input").unwrap();
     let cards: Vec<Card> = input.lines().map(Card::parse_line).collect();
     part1(&cards);
+    part2(&cards);
 }
 
 #[derive(Debug)]
@@ -67,4 +68,22 @@ fn part1(cards: &Vec<Card>) {
     let points: u32 = cards.iter().map(Card::points).sum();
 
     println!("Part 1: {points}");
+}
+
+
+fn part2(cards: &Vec<Card>) {
+    let matched_numbers: Vec<u32> = cards.iter().map(|card| card.matched_numbers().len() as u32).collect();
+    let mut counts: Vec<u32> = Vec::with_capacity(matched_numbers.len());
+    for _ in 0..matched_numbers.len() {
+        counts.push(1);
+    }
+
+    for i in 0..cards.len() {
+        for j in 0..matched_numbers[i] as usize {
+            counts[i + j + 1] += counts[i];
+        }
+    }
+
+    let num_cards: u32 = counts.iter().sum();
+    println!("Part 2: {num_cards}");
 }
