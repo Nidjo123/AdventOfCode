@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
+use std::ops::Range;
 use std::str::FromStr;
 
 use regex::Regex;
@@ -14,19 +16,18 @@ fn main() {
 
 #[derive(Debug)]
 struct RangeMap {
-    source: u64,
+    source_range: Range<u64>,
     destination: u64,
-    length: u64,
 }
 
 impl RangeMap {
     fn new(source: u64, destination: u64, length: u64) -> Self {
-        Self { source, destination, length }
+        Self { source_range: source..source + length, destination }
     }
 
     fn map(&self, number: u64) -> Option<u64> {
-        if (self.source..self.source + self.length).contains(&number) {
-            Some(self.destination + number - self.source)
+        if self.source_range.contains(&number) {
+            Some(self.destination + number - self.source_range.start)
         } else {
             None
         }
@@ -63,28 +64,19 @@ impl Map {
 #[derive(Debug)]
 struct Data {
     seeds: Vec<u64>,
-    maps: Vec<Map>,
+    maps: HashMap<String, Map>,
 }
 
 impl Data {
     fn new() -> Self {
         Self {
             seeds: Vec::new(),
-            maps: Vec::new(),
+            maps: HashMap::new(),
         }
-    }
-
-    fn get_map_for_category(&self, category: &str) -> Option<&Map> {
-        for map in &self.maps {
-            if map.source_name == category {
-                return Some(map);
-            }
-        }
-        None
     }
 
     fn map(&self, src_category: &str, number: u64) -> Option<(&str, u64)> {
-        match self.get_map_for_category(src_category) {
+        match self.maps.get(src_category) {
             Some(map) => {
                 Some((&map.destination_name, map.map(number)))
             }
@@ -111,7 +103,7 @@ fn parse_data(input: &str) -> Data {
             data.seeds.extend(seeds);
         } else if let Some(map_names_capture) = map_names_regex.captures(line) {
             if !map.source_name.is_empty() && !map.destination_name.is_empty() {
-                data.maps.push(map);
+                data.maps.insert(map.source_name.to_owned(), map);
             }
             let source_name = map_names_capture.name("src_name").unwrap().as_str().to_owned();
             let destination_name = map_names_capture.name("dst_name").unwrap().as_str().to_owned();
@@ -121,7 +113,7 @@ fn parse_data(input: &str) -> Data {
         }
         map
     });
-    data.maps.push(last_map);
+    data.maps.insert(last_map.source_name.to_owned(), last_map);
     data
 }
 
@@ -155,10 +147,13 @@ fn part2(data: &Data) {
                 category = category_;
                 number = number_;
             }
-            min_location = min_location.min(Some(number));
+            min_location = match min_location {
+                None => Some(number),
+                Some(loc) => Some(number.min(loc)),
+            };
         }
     }
-    let min_location = min_location.unwrap();
+    let min_location = min_location.unwrap_or(0);
     println!("Part 2: {min_location}");
 }
 
