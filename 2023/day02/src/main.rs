@@ -1,6 +1,6 @@
+use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
-use regex::Regex;
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 enum Color {
@@ -27,7 +27,7 @@ impl Game {
                     "red" => Color::RED,
                     "green" => Color::GREEN,
                     "blue" => Color::BLUE,
-                    _ => panic!("unknown color")
+                    _ => panic!("unknown color"),
                 };
                 balls.insert(color, *number_of_balls);
             }
@@ -44,11 +44,7 @@ fn main() {
 }
 
 fn part1(input: &str) {
-    let balls = HashMap::from([
-        (Color::RED, 12),
-        (Color::GREEN, 13),
-        (Color::BLUE, 14),
-    ]);
+    let balls = HashMap::from([(Color::RED, 12), (Color::GREEN, 13), (Color::BLUE, 14)]);
 
     let mut valid_games = 0;
     for line in input.lines() {
@@ -80,7 +76,6 @@ fn part2(input: &str) {
     for line in input.lines() {
         let line_parts: Vec<&str> = line.split(':').collect();
         let game = Game::parse(&line_parts[1]);
-
 
         let mut ball_count = HashMap::new();
         for hand in &game.hands {

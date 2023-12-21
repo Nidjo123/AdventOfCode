@@ -1,12 +1,11 @@
-use std::collections::HashMap;
 use regex::Regex;
+use std::collections::HashMap;
 
 fn main() {
     let input = std::fs::read_to_string("src/input").unwrap();
     part1(&input);
     part2(&input);
 }
-
 
 fn part1(input: &str) {
     let first_digit_regex = Regex::new(r#"^\D*(\d)"#).unwrap();
@@ -21,7 +20,6 @@ fn part1(input: &str) {
     });
     println!("Part 1: {part1}");
 }
-
 
 fn part2(input: &str) {
     let digit_strings = HashMap::from([

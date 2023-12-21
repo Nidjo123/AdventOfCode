@@ -21,21 +21,29 @@ struct Card {
 
 impl Card {
     fn parse_numbers<T: FromStr>(text: &str) -> Vec<T>
-        where <T as FromStr>::Err: Debug {
+    where
+        <T as FromStr>::Err: Debug,
+    {
         let number_regex = Regex::new(r"\d+").unwrap();
-        number_regex.find_iter(text)
+        number_regex
+            .find_iter(text)
             .map(|s| s.as_str().parse::<T>().unwrap())
             .collect()
     }
 
     fn parse_regex_match_numbers<T: FromStr>(captures: &Captures, name: &str) -> Vec<T>
-        where <T as FromStr>::Err: Debug {
+    where
+        <T as FromStr>::Err: Debug,
+    {
         let numbers = captures.name(name).unwrap().as_str();
         Self::parse_numbers(numbers)
     }
 
     fn parse_line(line: &str) -> Card {
-        let card_regex = Regex::new(r"^Card\s+(?<id>\d+):\s+(?<winning_numbers>[^|]+)\s*\|\s*(?<my_numbers>.+)\s*$").unwrap();
+        let card_regex = Regex::new(
+            r"^Card\s+(?<id>\d+):\s+(?<winning_numbers>[^|]+)\s*\|\s*(?<my_numbers>.+)\s*$",
+        )
+        .unwrap();
         let card_match = card_regex.captures(line).expect("invalid line");
         let id = card_match.name("id").expect("invalid card id");
         let id = id.as_str().parse::<u32>().unwrap();
@@ -43,7 +51,11 @@ impl Card {
         let winning_numbers = Self::parse_regex_match_numbers(&card_match, "winning_numbers");
         let my_numbers = Self::parse_regex_match_numbers(&card_match, "my_numbers");
 
-        Card { id, winning_numbers, my_numbers }
+        Card {
+            id,
+            winning_numbers,
+            my_numbers,
+        }
     }
 
     fn matched_numbers(&self) -> Vec<u32> {
@@ -63,16 +75,17 @@ impl Card {
     }
 }
 
-
 fn part1(cards: &Vec<Card>) {
     let points: u32 = cards.iter().map(Card::points).sum();
 
     println!("Part 1: {points}");
 }
 
-
 fn part2(cards: &Vec<Card>) {
-    let matched_numbers: Vec<u32> = cards.iter().map(|card| card.matched_numbers().len() as u32).collect();
+    let matched_numbers: Vec<u32> = cards
+        .iter()
+        .map(|card| card.matched_numbers().len() as u32)
+        .collect();
     let mut counts: Vec<u32> = Vec::with_capacity(matched_numbers.len());
     for _ in 0..matched_numbers.len() {
         counts.push(1);
