@@ -10,6 +10,7 @@ fn main() {
     let input = fs::read_to_string("src/input").unwrap();
     let hands = parse_hands(&input);
     part1(&hands);
+    part2(&hands);
 }
 
 fn parse_hands(input: &str) -> Vec<Hand> {
@@ -42,6 +43,16 @@ enum Card {
     Queen,
     King,
     Ace,
+}
+
+impl Card {
+    fn iter_cards() -> impl Iterator<Item = Self> {
+        use Card::*;
+        [
+            Ace, King, Queen, Jack, T, Nine, Eight, Seven, Six, Five, Four, Three, Two,
+        ]
+        .into_iter()
+    }
 }
 
 impl FromStr for Card {
@@ -133,6 +144,16 @@ impl PartialEq for HandType {
 
 impl Eq for HandType {}
 
+fn joker_card_value(card: Card) -> usize {
+    if card == Card::Jack {
+        0
+    } else if card < Card::Jack {
+        card as usize + 1
+    } else {
+        card as usize
+    }
+}
+
 impl Hand {
     fn new(cards: Vec<Card>, bid: u64) -> Hand {
         Hand {
@@ -141,37 +162,73 @@ impl Hand {
         }
     }
 
-    fn get_type(&self) -> HandType {
-        let counter = Counter::from_iter(self.cards.iter().copied());
+    fn get_cards_hand_type(cards: &[Card; 5], card_values: Option<fn(Card) -> usize>) -> HandType {
+        let counter = Counter::from_iter(cards.iter());
         let mut counts = counter.into_iter().collect::<Vec<_>>();
-        counts.sort_by_key(|(card, count)| (*count, *card));
-        if let [(card, 5)] = counts[..] {
+        let card_value = card_values.unwrap_or(|card| card as usize);
+        counts.sort_by_key(|(card, count)| (*count, card_value(**card)));
+        if let [(&card, 5)] = counts[..] {
             return HandType::FiveOfAKind(card);
         }
-        if let [_, (card, 4)] = counts[..] {
+        if let [_, (&card, 4)] = counts[..] {
             return HandType::FourOfAKind(card);
         }
-        if let [(card2, 2), (card1, 3)] = counts[..] {
+        if let [(&card2, 2), (&card1, 3)] = counts[..] {
             return HandType::FullHouse(card1, card2);
         }
-        if let [(_, 1), (_, 1), (card1, 3)] = counts[..] {
+        if let [(_, 1), (_, 1), (&card1, 3)] = counts[..] {
             return HandType::ThreeOfAKind(card1);
         }
-        if let [(_, 1), (card2, 2), (card1, 2)] = counts[..] {
+        if let [(_, 1), (&card2, 2), (&card1, 2)] = counts[..] {
             return HandType::TwoPair(card1, card2);
         }
-        if let [.., (card1, 2)] = counts[..] {
+        if let [.., (&card1, 2)] = counts[..] {
             return HandType::OnePair(card1);
         }
-        HandType::HighCard(self.cards.iter().max().unwrap().clone())
+        HandType::HighCard(
+            cards
+                .iter()
+                .map(|card| (card, card_value(*card)))
+                .max_by_key(|(_, card_val)| *card_val)
+                .unwrap()
+                .0
+                .clone(),
+        )
+    }
+
+    fn get_type(&self, card_values: Option<fn(Card) -> usize>) -> HandType {
+        Self::get_cards_hand_type(&self.cards, card_values)
+    }
+
+    fn get_joker_type(&self) -> HandType {
+        Self::get_joker_type_(self.cards.clone())
+    }
+
+    fn get_joker_type_(cards: [Card; 5]) -> HandType {
+        let mut best_hand_type = Self::get_cards_hand_type(&cards, Some(joker_card_value));
+        for (i, _) in cards
+            .iter()
+            .enumerate()
+            .filter(|(_, &card)| card == Card::Jack)
+        {
+            for new_card in Card::iter_cards().filter(|&x| x != Card::Jack) {
+                let mut new_cards = cards.clone();
+                new_cards[i] = new_card;
+                let new_hand_type = Self::get_joker_type_(new_cards);
+                best_hand_type = best_hand_type.max(new_hand_type);
+            }
+        }
+        best_hand_type
     }
 }
 
 fn part1(hands: &Vec<Hand>) {
-    let mut hands: Vec<Hand> = hands.iter().copied().collect();
-    hands.sort_by(|hand1, hand2| {
-        let type1 = hand1.get_type();
-        let type2 = hand2.get_type();
+    let mut hands: Vec<_> = hands
+        .iter()
+        .copied()
+        .map(|hand| (hand, hand.get_type(None)))
+        .collect();
+    hands.sort_by(|(hand1, type1), (hand2, type2)| {
         if type1 == type2 {
             for (card1, card2) in hand1.cards.iter().zip(hand2.cards.iter()) {
                 if card1 > card2 {
@@ -187,7 +244,34 @@ fn part1(hands: &Vec<Hand>) {
     let total_winnings: u64 = hands
         .iter()
         .enumerate()
-        .map(|(rank, hand)| hand.bid * (rank as u64 + 1))
+        .map(|(rank, (hand, _))| hand.bid * (rank as u64 + 1))
         .sum();
     println!("Part 1: {total_winnings}");
+}
+
+fn part2(hands: &Vec<Hand>) {
+    let mut hands: Vec<_> = hands
+        .iter()
+        .copied()
+        .map(|hand| (hand, hand.get_joker_type()))
+        .collect();
+
+    hands.sort_by(|(hand1, type1), (hand2, type2)| {
+        if type1 == type2 {
+            for (card1, card2) in hand1.cards.iter().zip(hand2.cards.iter()) {
+                match joker_card_value(*card1).cmp(&joker_card_value(*card2)) {
+                    ordering @ (Ordering::Less | Ordering::Greater) => return ordering,
+                    _ => continue,
+                }
+            }
+            panic!("no order for {hand1:?} and {hand2:?}");
+        }
+        type1.cmp(&type2)
+    });
+    let total_winnings: u64 = hands
+        .iter()
+        .enumerate()
+        .map(|(rank, (hand, _))| hand.bid * (rank as u64 + 1))
+        .sum();
+    println!("Part 2: {total_winnings}");
 }
