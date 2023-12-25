@@ -160,7 +160,6 @@ fn part2(data: &Data) {
         .step_by(2)
         .zip(data.seeds.iter().skip(1).step_by(2))
     {
-        println!("{seed_start} {length}");
         for seed in *seed_start..seed_start + length {
             let mut category = "seed";
             let mut number = seed;
