@@ -43,7 +43,7 @@ impl Sequence {
     fn calc_history_value(&self, next_history: fn(i64, &SeqValues) -> i64) -> i64 {
         let subsequences = self.subsequences();
         subsequences.iter().rev().skip(2).fold(
-            *subsequences[subsequences.len() - 2].last().unwrap(),
+            *subsequences.iter().nth_back(1).unwrap().last().unwrap(),
             next_history,
         )
     }
