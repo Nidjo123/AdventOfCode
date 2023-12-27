@@ -155,11 +155,10 @@ fn lcm(numbers: &Vec<usize>) -> usize {
             *entry = count.max(*entry);
         }
     }
-    let mut res = 1;
-    for (factor, count) in prime_factor_counts {
-        res *= factor.pow(count as u32);
-    }
-    res
+    prime_factor_counts
+        .iter()
+        .map(|(factor, &count)| factor.pow(count as u32))
+        .product()
 }
 
 #[test]
