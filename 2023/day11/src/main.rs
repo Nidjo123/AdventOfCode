@@ -4,6 +4,7 @@ fn main() {
     let input = fs::read_to_string("src/input").unwrap();
     let galaxy = Galaxy::from(&input);
     part1(&galaxy);
+    part2(&galaxy);
 }
 
 struct Galaxy {
@@ -56,7 +57,7 @@ impl Galaxy {
         }
     }
 
-    fn galaxy_positions(&self) -> Vec<Position> {
+    fn galaxy_positions(&self, expansion_rate: usize) -> Vec<Position> {
         self.map
             .iter()
             .enumerate()
@@ -73,7 +74,10 @@ impl Galaxy {
                             .iter()
                             .filter(|&empty_col_idx| empty_col_idx < &col_idx)
                             .count();
-                        Some(Position(row_idx + expanded_rows, col_idx + expanded_cols))
+                        Some(Position(
+                            row_idx + expanded_rows * (expansion_rate - 1),
+                            col_idx + expanded_cols * (expansion_rate - 1),
+                        ))
                     } else {
                         None
                     }
@@ -83,8 +87,8 @@ impl Galaxy {
             .collect()
     }
 
-    fn manhattan_distance_sum(&self) -> usize {
-        let galaxy_positions = self.galaxy_positions();
+    fn manhattan_distance_sum(&self, expansion_rate: usize) -> usize {
+        let galaxy_positions = self.galaxy_positions(expansion_rate);
         galaxy_positions
             .iter()
             .enumerate()
@@ -100,7 +104,12 @@ impl Galaxy {
 }
 
 fn part1(galaxy: &Galaxy) {
-    let manhattan_distance_sum = galaxy.manhattan_distance_sum();
+    let manhattan_distance_sum = galaxy.manhattan_distance_sum(2);
+    println!("Part 1: {manhattan_distance_sum}");
+}
+
+fn part2(galaxy: &Galaxy) {
+    let manhattan_distance_sum = galaxy.manhattan_distance_sum(1_000_000);
     println!("Part 1: {manhattan_distance_sum}");
 }
 
@@ -125,6 +134,8 @@ mod tests {
     #[test]
     fn test_distance_sum() {
         let galaxy = read_galaxy("test");
-        assert_eq!(galaxy.manhattan_distance_sum(), 374);
+        assert_eq!(galaxy.manhattan_distance_sum(2), 374);
+        assert_eq!(galaxy.manhattan_distance_sum(10), 1030);
+        assert_eq!(galaxy.manhattan_distance_sum(100), 8410);
     }
 }
