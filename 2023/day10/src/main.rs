@@ -169,8 +169,9 @@ impl Map {
     fn rows(&self) -> usize {
         self.tiles.len()
     }
+
     fn cols(&self) -> usize {
-        self.tiles[0].len()
+        self.tiles.first().map_or_else(|| 0, |v| v.len())
     }
 
     fn get_tile(&self, pos: &Position) -> &Tile {
