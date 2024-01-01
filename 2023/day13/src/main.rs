@@ -3,6 +3,7 @@ use std::fs;
 fn main() {
     let patterns = read_patterns("input");
     part1(&patterns);
+    part2(&patterns);
 }
 
 fn read_patterns(name: &str) -> Vec<Pattern> {
@@ -39,25 +40,37 @@ struct MirrorLine {
 }
 
 impl Pattern {
-    fn search_lines(lines: &Vec<String>) -> Option<usize> {
+    fn num_diffs(s1: &str, s2: &str) -> usize {
+        s1.chars().zip(s2.chars()).filter(|(x, y)| x != y).count()
+    }
+
+    fn search_lines(lines: &Vec<String>) -> Vec<usize> {
+        let mut number_of_diffs = Vec::new();
         for (line_idx, _line) in lines.iter().enumerate().take(lines.len() - 1) {
             let first_part: Vec<_> = lines.iter().take(line_idx + 1).rev().collect();
             let second_part: Vec<_> = lines.iter().skip(line_idx + 1).collect();
-            if first_part.len() > 0
-                && second_part.len() > 0
-                && first_part
+            if first_part.len() > 0 && second_part.len() > 0 {
+                let n = first_part
                     .iter()
                     .zip(second_part.iter())
-                    .all(|(x, y)| x == y)
-            {
-                return Some(line_idx);
+                    .map(|(x, y)| Self::num_diffs(x, y))
+                    .sum();
+                number_of_diffs.push(n);
             }
         }
-        None
+        number_of_diffs
     }
 
-    fn search_horizontal_lines(&self) -> Option<usize> {
-        Self::search_lines(&self.pattern)
+    fn find_idx_with_n_diffs(diffs: &Vec<usize>, num_diffs: usize) -> Option<usize> {
+        diffs
+            .iter()
+            .enumerate()
+            .find_map(|(idx, &diffs)| if diffs == num_diffs { Some(idx) } else { None })
+    }
+
+    fn search_horizontal_lines(&self, num_diffs: usize) -> Option<usize> {
+        let diffs = &Self::search_lines(&self.pattern);
+        Self::find_idx_with_n_diffs(diffs, num_diffs)
     }
 
     fn number_of_columns(&self) -> usize {
@@ -72,20 +85,22 @@ impl Pattern {
             .collect()
     }
 
-    fn search_vertical_lines(&self) -> Option<usize> {
+    fn search_vertical_lines(&self, num_diffs: usize) -> Option<usize> {
         let columns: Vec<_> = (0..self.number_of_columns())
             .map(|col_idx| self.get_column(col_idx))
             .collect();
-        Self::search_lines(&columns)
+
+        let diffs = &Self::search_lines(&columns);
+        Self::find_idx_with_n_diffs(diffs, num_diffs)
     }
 
-    fn mirror_line(&self) -> Option<MirrorLine> {
-        if let Some(row) = self.search_horizontal_lines() {
+    fn mirror_line(&self, num_diffs: usize) -> Option<MirrorLine> {
+        if let Some(row) = self.search_horizontal_lines(num_diffs) {
             Some(MirrorLine {
                 line_type: MirrorLineType::Row,
                 n: row,
             })
-        } else if let Some(column) = self.search_vertical_lines() {
+        } else if let Some(column) = self.search_vertical_lines(num_diffs) {
             Some(MirrorLine {
                 line_type: MirrorLineType::Column,
                 n: column,
@@ -103,27 +118,39 @@ mod tests {
     #[test]
     fn test_search_lines() {
         assert_eq!(
-            Pattern::search_lines(&vec![String::from(".."), String::from("#.")]),
+            Pattern::find_idx_with_n_diffs(
+                &Pattern::search_lines(&vec![String::from(".."), String::from("#.")]),
+                0
+            ),
             None
         );
 
         assert_eq!(
-            Pattern::search_lines(&vec![String::from(".."), String::from("..")]),
+            Pattern::find_idx_with_n_diffs(
+                &Pattern::search_lines(&vec![String::from(".."), String::from("..")]),
+                0
+            ),
             Some(0)
         );
 
         assert_eq!(
-            Pattern::search_lines(&vec![String::from(".#"), String::from(".#")]),
+            Pattern::find_idx_with_n_diffs(
+                &Pattern::search_lines(&vec![String::from(".#"), String::from(".#")]),
+                0
+            ),
             Some(0)
         );
 
         assert_eq!(
-            Pattern::search_lines(&vec![
-                String::from(".#"),
-                String::from("#."),
-                String::from("#."),
-                String::from(".#")
-            ]),
+            Pattern::find_idx_with_n_diffs(
+                &Pattern::search_lines(&vec![
+                    String::from(".#"),
+                    String::from("#."),
+                    String::from("#."),
+                    String::from(".#")
+                ]),
+                0
+            ),
             Some(1)
         );
     }
@@ -135,17 +162,25 @@ mod tests {
             panic!("unexpected number of patterns")
         };
         assert_eq!(
-            pat1.mirror_line(),
+            pat1.mirror_line(0),
             Some(MirrorLine {
                 line_type: MirrorLineType::Column,
                 n: 4
             })
         );
         assert_eq!(
-            pat2.mirror_line(),
+            pat2.mirror_line(0),
             Some(MirrorLine {
                 line_type: MirrorLineType::Row,
                 n: 3
+            })
+        );
+
+        assert_eq!(
+            pat1.mirror_line(1),
+            Some(MirrorLine {
+                line_type: MirrorLineType::Row,
+                n: 2
             })
         );
     }
@@ -155,7 +190,7 @@ fn part1(patterns: &Vec<Pattern>) {
     let mut cols_to_left = 0;
     let mut rows_above = 0;
     for pattern in patterns {
-        match pattern.mirror_line() {
+        match pattern.mirror_line(0) {
             Some(MirrorLine { line_type, n }) => match line_type {
                 MirrorLineType::Column => cols_to_left += n + 1,
                 MirrorLineType::Row => rows_above += n + 1,
@@ -165,4 +200,20 @@ fn part1(patterns: &Vec<Pattern>) {
     }
     let res = cols_to_left + rows_above * 100;
     println!("Part 1: {res}");
+}
+
+fn part2(patterns: &Vec<Pattern>) {
+    let mut cols_to_left = 0;
+    let mut rows_above = 0;
+    for pattern in patterns {
+        match pattern.mirror_line(1) {
+            Some(MirrorLine { line_type, n }) => match line_type {
+                MirrorLineType::Column => cols_to_left += n + 1,
+                MirrorLineType::Row => rows_above += n + 1,
+            },
+            None => panic!("no mirror found"),
+        }
+    }
+    let res = cols_to_left + rows_above * 100;
+    println!("Part 2: {res}");
 }
