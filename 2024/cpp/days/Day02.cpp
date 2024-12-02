@@ -47,4 +47,24 @@ void Day02::SolvePart1() {
 }
 
 void Day02::SolvePart2() {
+    int safe_reports = 0;
+    for (const auto &report: reports) {
+        if (IsSafe(report)) {
+            safe_reports++;
+            continue;
+        }
+        for (auto i = 0; i < report.size(); i++) {
+            Report new_report;
+            for (auto j = 0; j < report.size(); j++) {
+                if (i != j) {
+                    new_report.push_back(report[j]);
+                }
+            }
+            if (IsSafe(new_report)) {
+                safe_reports++;
+                break;
+            }
+        }
+    }
+    std::cout << "Day02::Part2: " << safe_reports << std::endl;
 }

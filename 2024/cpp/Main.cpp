@@ -13,6 +13,7 @@ int main() {
         const auto &day = days[i];
         day->SetData(lines);
         day->Solve();
+        std::cout << std::endl;
     }
 
     return 0;
