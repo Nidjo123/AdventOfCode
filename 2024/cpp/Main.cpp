@@ -1,13 +1,19 @@
 #include <iostream>
 #include "Day01.h"
+#include "Day02.h"
 #include "util/Util.h"
 
 int main() {
-    Day01 day01;
+    std::vector<std::shared_ptr<Day> > days;
+    days.push_back(std::make_shared<Day01>());
+    days.push_back(std::make_shared<Day02>());
 
-    auto lines = LoadInputLines("inputs/input01");
-    day01.SetData(lines);
-    day01.Solve();
+    for (auto i = 0; i < days.size(); i++) {
+        auto lines = LoadInputLines(std::format("inputs/input{:02}", i + 1));
+        const auto &day = days[i];
+        day->SetData(lines);
+        day->Solve();
+    }
 
     return 0;
 }
