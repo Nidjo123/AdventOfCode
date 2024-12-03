@@ -11,7 +11,9 @@ add_executable(cpp Main.cpp
         days/Day01.cpp
         days/Day01.h
         days/Day02.cpp
-        days/Day02.h)
+        days/Day02.h
+        days/Day03.cpp
+        days/Day03.h)
 
 target_include_directories(cpp PRIVATE days util)
 

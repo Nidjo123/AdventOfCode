@@ -1,12 +1,14 @@
 #include <iostream>
 #include "Day01.h"
 #include "Day02.h"
+#include "Day03.h"
 #include "util/Util.h"
 
 int main() {
     std::vector<std::shared_ptr<Day> > days;
     days.push_back(std::make_shared<Day01>());
     days.push_back(std::make_shared<Day02>());
+    days.push_back(std::make_shared<Day03>());
 
     for (auto i = 0; i < days.size(); i++) {
         auto lines = LoadInputLines(std::format("inputs/input{:02}", i + 1));
