@@ -5,6 +5,12 @@
 #include "Day04.h"
 #include "util/Util.h"
 
+#ifdef NDEBUG
+#define INPUT_FILE_FORMAT "inputs/input{:02}"
+#else
+#define INPUT_FILE_FORMAT "inputs/test_input{:02}"
+#endif
+
 int main() {
     std::vector<std::shared_ptr<Day> > days;
     days.push_back(std::make_shared<Day01>());
@@ -13,7 +19,7 @@ int main() {
     days.push_back(std::make_shared<Day04>());
 
     for (auto i = 0; i < days.size(); i++) {
-        auto lines = LoadInputLines(std::format("inputs/input{:02}", i + 1));
+        auto lines = LoadInputLines(std::format(INPUT_FILE_FORMAT, i + 1));
         const auto &day = days[i];
         day->SetData(lines);
         day->Solve();
