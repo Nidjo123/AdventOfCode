@@ -2,6 +2,7 @@
 #include "Day01.h"
 #include "Day02.h"
 #include "Day03.h"
+#include "Day04.h"
 #include "util/Util.h"
 
 int main() {
@@ -9,6 +10,7 @@ int main() {
     days.push_back(std::make_shared<Day01>());
     days.push_back(std::make_shared<Day02>());
     days.push_back(std::make_shared<Day03>());
+    days.push_back(std::make_shared<Day04>());
 
     for (auto i = 0; i < days.size(); i++) {
         auto lines = LoadInputLines(std::format("inputs/input{:02}", i + 1));
