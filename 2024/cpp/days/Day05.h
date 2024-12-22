@@ -4,6 +4,8 @@
 
 #include "Day.h"
 #include <vector>
+#include <set>
+#include <map>
 
 class Day05 : public Day {
 public:
@@ -14,12 +16,7 @@ public:
     void SolvePart2() override;
 
 private:
-    struct Constraint {
-        int before;
-        int after;
-    };
-
-    std::vector<Constraint> constraints;
+    std::map<int, std::set<int>> constraints;
     std::vector<std::vector<int>> print_jobs;
 };
 
