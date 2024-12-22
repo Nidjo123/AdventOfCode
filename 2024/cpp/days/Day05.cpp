@@ -36,12 +36,8 @@ void Day05::PreprocessData() {
 void Day05::SolvePart1() {
     auto mid_sum = 0;
     for (const auto &print_job: print_jobs) {
-        std::vector<int> sorted_pages = print_job;
-        std::sort(sorted_pages.begin(), sorted_pages.end(), [this](int x, int y) -> bool {
-            return constraints[x].contains(y);
-        });
-
-        if (print_job == sorted_pages) {
+        const auto sorted_job = GetSortedJob(print_job);
+        if (print_job == sorted_job) {
             auto mid_idx = print_job.size() / 2;
             mid_sum += print_job[mid_idx];
         }
@@ -51,5 +47,22 @@ void Day05::SolvePart1() {
 }
 
 void Day05::SolvePart2() {
+    auto mid_sum = 0;
+    for (const auto &print_job: print_jobs) {
+        const auto sorted_job = GetSortedJob(print_job);
+        if (print_job != sorted_job) {
+            auto mid_idx = sorted_job.size() / 2;
+            mid_sum += sorted_job[mid_idx];
+        }
+    }
 
+    std::cout << "Day05::Part2: " << mid_sum << std::endl;
+}
+
+Day05::PrintJob Day05::GetSortedJob(const Day05::PrintJob &print_job) const {
+    std::vector<int> sorted_pages = print_job;
+    std::sort(sorted_pages.begin(), sorted_pages.end(), [this](int x, int y) -> bool {
+        return constraints.contains(x) && constraints.at(x).contains(y);
+    });
+    return sorted_pages;
 }

@@ -16,8 +16,12 @@ public:
     void SolvePart2() override;
 
 private:
+    using PrintJob = std::vector<int>;
+
+    PrintJob GetSortedJob(const PrintJob &) const;
+
     std::map<int, std::set<int>> constraints;
-    std::vector<std::vector<int>> print_jobs;
+    std::vector<PrintJob> print_jobs;
 };
 
 #endif //CPP_DAY05_H
