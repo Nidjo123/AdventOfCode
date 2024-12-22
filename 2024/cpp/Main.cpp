@@ -3,6 +3,7 @@
 #include "Day02.h"
 #include "Day03.h"
 #include "Day04.h"
+#include "Day05.h"
 #include "util/Util.h"
 
 #ifdef NDEBUG
@@ -17,6 +18,7 @@ int main() {
     days.push_back(std::make_shared<Day02>());
     days.push_back(std::make_shared<Day03>());
     days.push_back(std::make_shared<Day04>());
+    days.push_back(std::make_shared<Day05>());
 
     for (auto i = 0; i < days.size(); i++) {
         auto lines = LoadInputLines(std::format(INPUT_FILE_FORMAT, i + 1));
