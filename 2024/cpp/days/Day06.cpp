@@ -7,74 +7,94 @@
 
 static const char GUARD_START_CHAR = '^';
 
-struct Guard {
-    enum class Direction {
-        UP = 0,
-        RIGHT = 1,
-        DOWN = 2,
-        LEFT = 3,
-        Size
-    };
+Guard::Guard(const Position &pos, const Direction &dir) : position{pos}, direction{dir} {
+    path.emplace_back(pos.x, pos.y, dir);
+}
 
-    Direction getRightDirection(const Direction &direction) const {
-        switch (direction) {
-            case Direction::UP:
-                return Direction::RIGHT;
-            case Direction::RIGHT:
-                return Direction::DOWN;
-            case Direction::DOWN:
-                return Direction::LEFT;
-            case Direction::LEFT:
-                return Direction::UP;
-            default:
-                assert(false);
-        }
+void Guard::Move(const Direction &dir = Direction::Size) {
+    if (dir != Direction::Size) {
+        direction = dir;
     }
+    position = GetNextPosition(position, direction);
+    path.emplace_back(position.x, position.y, direction);
+}
 
-    static constexpr int DX[] = {0, 1, 0, -1};
-    static constexpr int DY[] = {-1, 0, 1, 0};
-
-    Position GetNextPosition(const Position &pos, const Direction &dir) const {
-        auto dir_idx = static_cast<int>(dir);
-        return Position{pos.x + DX[dir_idx], pos.y + DY[dir_idx]};
+Guard::Direction Guard::GetRightDirection(const Direction &direction) {
+    switch (direction) {
+        case Direction::UP:
+            return Direction::RIGHT;
+        case Direction::RIGHT:
+            return Direction::DOWN;
+        case Direction::DOWN:
+            return Direction::LEFT;
+        case Direction::LEFT:
+            return Direction::UP;
+        default:
+            assert(false);
     }
+}
 
-    using PathElement = std::tuple<int, int, Direction>;
+Position Guard::GetNextPosition(const Position &pos, const Direction &dir) {
+    auto dir_idx = static_cast<int>(dir);
+    return Position{pos.x + DX[dir_idx], pos.y + DY[dir_idx]};
+}
 
-    Position position;
-    Direction direction;
-    std::set<PathElement> path;
-};
+std::set<Position> Guard::GetVisitedPositions() const {
+    std::set<Position> visited_positions;
+    for (const auto &path_elem: path) {
+        const auto x = std::get<0>(path_elem);
+        const auto y = std::get<1>(path_elem);
+        visited_positions.insert({x, y});
+    }
+    return visited_positions;
+}
+
+void Guard::TurnRight() {
+    direction = GetRightDirection(direction);
+}
+
+bool Guard::IsLooping() const {
+    return std::find(path.begin(), path.end(), PathElement{position.x, position.y, direction}) < path.end() - 1;
+}
 
 void Day06::SolvePart1() {
-    auto map = lines;
-    auto pos = GetStartPosition();
-    auto guard = Guard{.position= pos, .direction=Guard::Direction::UP};
+    auto start_pos = GetStartPosition();
+    auto guard = Guard(start_pos, Guard::Direction::UP);
 
-    do {
-        map[guard.position.y][guard.position.x] = 'X';
-        guard.path.insert({guard.position.x, guard.position.y, guard.direction});
+    guard = SimulateGuard(guard);
 
-        auto next_pos = guard.GetNextPosition(guard.position, guard.direction);
-        if (!IsPositionInsideMap(next_pos)) {
-            break;
-        } else if (map[next_pos.y][next_pos.x] == '#') {
-            auto new_dir = (static_cast<int>(guard.direction) + 1) % static_cast<int>(Guard::Direction::Size);
-            guard.direction = static_cast<Guard::Direction>(new_dir);
-        } else {
-            guard.position = next_pos;
-        }
-    } while (IsPositionInsideMap(guard.position));
-
-    auto visit_count = 0;
-    for (const auto &row: map) {
-        visit_count += std::count_if(row.begin(), row.end(), [](char c) { return c == 'X'; });
-    }
-
-    std::cout << "Day06::Part1: " << visit_count << std::endl;
+    std::cout << "Day06::Part1: " << guard.GetVisitedPositions().size() << std::endl;
 }
 
 void Day06::SolvePart2() {
+    auto &map = lines;
+    auto start_pos = GetStartPosition();
+    Guard guard(start_pos, Guard::Direction::UP);
+
+    std::set<Position> potential_obstacles;
+    do {
+        auto next_pos = Guard::GetNextPosition(guard.position, guard.direction);
+        if (!IsPositionInsideMap(next_pos)) {
+            break;
+        } else if (map[next_pos.y][next_pos.x] == '#') {
+            guard.TurnRight();
+        } else {
+            if (!potential_obstacles.contains(next_pos)) {
+                // try putting an obstacle in front
+                const auto old_val = map[next_pos.y][next_pos.x];
+                map[next_pos.y][next_pos.x] = '#';
+                Guard new_guard(start_pos, Guard::Direction::UP);
+                auto simulated_guard = SimulateGuard(new_guard);
+                if (simulated_guard.IsLooping()) {
+                    potential_obstacles.insert(next_pos);
+                }
+                map[next_pos.y][next_pos.x] = old_val;
+            }
+            guard.Move();
+        }
+    } while (IsPositionInsideMap(guard.position));
+
+    std::cout << "Day06::Part2: " << potential_obstacles.size() << std::endl;
 }
 
 Position Day06::GetStartPosition() const {
@@ -99,4 +119,23 @@ void Day06::PreprocessData() {
 
 bool Day06::IsPositionInsideMap(const Position &position) const {
     return position.x >= 0 && position.y >= 0 && position.y < lines.size() && position.x < lines[0].size();
+}
+
+Guard Day06::SimulateGuard(Guard guard) const {
+    const auto &map = lines;
+    do {
+        auto next_pos = Guard::GetNextPosition(guard.position, guard.direction);
+        if (!IsPositionInsideMap(next_pos)) {
+            break;
+        } else if (map[next_pos.y][next_pos.x] == '#') {
+            guard.TurnRight();
+        } else {
+            guard.Move();
+            if (guard.IsLooping()) {
+                break;
+            }
+        }
+    } while (IsPositionInsideMap(guard.position));
+
+    return guard;
 }
