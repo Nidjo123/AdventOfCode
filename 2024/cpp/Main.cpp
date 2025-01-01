@@ -6,6 +6,7 @@
 #include "Day04.h"
 #include "Day05.h"
 #include "Day06.h"
+#include "Day07.h"
 
 #ifdef NDEBUG
 #define INPUT_FILE_FORMAT "inputs/input{:02}"
@@ -21,6 +22,7 @@ int main() {
     days.push_back(std::make_shared<Day04>());
     days.push_back(std::make_shared<Day05>());
     days.push_back(std::make_shared<Day06>());
+    days.push_back(std::make_shared<Day07>());
 
     for (auto i = 0; i < days.size(); i++) {
         auto lines = LoadInputLines(std::format(INPUT_FILE_FORMAT, i + 1));
