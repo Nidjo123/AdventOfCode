@@ -9,7 +9,7 @@ findMaxUpToIdx idx s = (maxChar, leftover)
       maxCharIdx = case elemIndex maxChar haystack of
         Just idx -> idx
         Nothing -> error "no index found"
-      leftover = snd $ splitAt (maxCharIdx + 1) s
+      leftover = drop (maxCharIdx + 1) s
 
 findMaxButLeave :: Int -> String -> (Char, String)
 findMaxButLeave n s = findMaxUpToIdx (length s - n) s
