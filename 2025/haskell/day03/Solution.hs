@@ -1,16 +1,31 @@
 import Data.List (elemIndex)
 
 
-maxJoltage :: String -> Int
-maxJoltage bank = read [fstDigit, sndDigit] 
+findMaxUpToIdx :: Int -> String -> (Char, String)
+findMaxUpToIdx idx s = (maxChar, leftover)
     where
-      fstDigit = maximum $ init bank
-      fstDigitIndex = case elemIndex fstDigit bank of
+      haystack = take idx s
+      maxChar = maximum haystack
+      maxCharIdx = case elemIndex maxChar haystack of
         Just idx -> idx
         Nothing -> error "no index found"
-      sndDigit = maximum . snd $ splitAt (fstDigitIndex + 1) bank 
+      leftover = snd $ splitAt (maxCharIdx + 1) s
+
+findMaxButLeave :: Int -> String -> (Char, String)
+findMaxButLeave n s = findMaxUpToIdx (length s - n) s
+
+maxJoltage' :: Int -> String -> String
+maxJoltage' 0 s = []
+maxJoltage' digitsLeft s = nextDigit : maxJoltage' (digitsLeft - 1) leftover
+    where
+      (nextDigit, leftover) = findMaxButLeave (digitsLeft - 1) s
+
+maxJoltage :: Int -> String -> Integer
+maxJoltage len bank = read $ maxJoltage' len bank
 
 main = do
     contents <- getContents
     let banks = lines contents
-    putStrLn $ show . sum $ map maxJoltage banks
+    putStrLn $ show . sum $ map (maxJoltage 2) banks
+    putStrLn $ show . sum $ map (maxJoltage 12) banks
+
