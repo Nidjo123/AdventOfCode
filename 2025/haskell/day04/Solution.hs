@@ -1,43 +1,50 @@
-data Coord = Coord Int Int deriving (Show)
-data Tile = Empty | Paper deriving (Show, Eq)
-type Grid = [[Tile]]
+import qualified Data.Set as Set
+
+data Coord = Coord Int Int deriving (Show, Eq, Ord)
+type CoordSet = Set.Set Coord
+data Grid = Grid Int Int CoordSet deriving (Show)
 
 gridHeight :: Grid -> Int
-gridHeight = length
+gridHeight (Grid _ h _) = h
 
 gridWidth :: Grid -> Int
-gridWidth grid = if gridHeight grid <= 0 then 0 else length $ head grid
-
-charToTile :: Char -> Tile
-charToTile c = case c of
-  '.' -> Empty
-  '@' -> Paper
-  _ -> error "Unknown tile char"
-
-getTileAt :: Grid -> Coord -> Tile
-getTileAt grid (Coord x y) = (grid !! y) !! x
+gridWidth (Grid w _ _) = w
 
 convertStrToGrid :: [String] -> Grid
-convertStrToGrid = map (map charToTile)
+convertStrToGrid rows = Grid (length rows) (length $ head rows) paperCoords
+  where
+    gridHeight = length rows
+    gridWidth = length $ head rows
+    paperCoords = Set.fromList [Coord x y | x <- [0..gridWidth - 1], y <- [0..gridHeight - 1], rows !! y !! x == '@']
 
 coordDeltasX = [1, 1, 0, -1, -1, -1, 0, 1]
 coordDeltasY = [0, -1, -1, -1, 0, 1, 1, 1]
 
-neighbourCoords :: Coord -> [Coord]
-neighbourCoords (Coord x y) = [Coord (x + dx) (y + dy) | (dx, dy) <- zip coordDeltasX coordDeltasY]
+neighbourCoords :: Coord -> CoordSet
+neighbourCoords (Coord x y) = Set.fromList [Coord (x + dx) (y + dy) | (dx, dy) <- zip coordDeltasX coordDeltasY]
 
 isCoordValid :: Grid -> Coord -> Bool
 isCoordValid grid (Coord x y) = not $ x < 0 || y < 0 || x >= gridWidth grid || y >= gridHeight grid
 
-neighbours :: Grid -> Coord -> [Tile]
-neighbours grid coord = map (getNeighbour grid) (neighbourCoords coord)
+isCoordAccessible :: Grid -> CoordSet -> Coord -> Bool
+isCoordAccessible (Grid w h rolls) removedRolls coord = Set.size neighbourRolls < 4
+  where
+    neighbourRolls = (Set.intersection (neighbourCoords coord) rolls) Set.\\ removedRolls
+
+accessibleRolls :: Grid -> CoordSet -> CoordSet
+accessibleRolls grid@(Grid _ _ rolls) removedRolls = Set.filter (isCoordAccessible grid removedRolls) (rolls Set.\\ removedRolls)
+
+cleanupRollsStep :: Grid -> CoordSet -> CoordSet
+cleanupRollsStep grid removedRolls = Set.union removedRolls (accessibleRolls grid removedRolls)
+
+cleanupRolls :: Grid -> CoordSet -> CoordSet
+cleanupRolls grid removedRolls = if removedRolls == nextRemovedRolls then removedRolls else Set.union removedRolls (cleanupRolls grid nextRemovedRolls)
  where
-  getNeighbour grid coord = if isCoordValid grid coord then getTileAt grid coord else Empty
+  nextRemovedRolls = cleanupRollsStep grid removedRolls
 
 main = do
   content <- getContents
   let grid = convertStrToGrid $ lines content
-      allCoords = [Coord x y | x <- [0 .. gridWidth grid - 1], y <- [0 .. gridHeight grid - 1]]
-      paperCoords = filter (\coord -> getTileAt grid coord == Paper) allCoords
-      part1 = length . filter (< 4) $ map (length . filter (== Paper) . neighbours grid) paperCoords
-  print part1
+  print . Set.size $ accessibleRolls grid Set.empty
+  let removedRolls = cleanupRolls grid Set.empty
+  print $ Set.size removedRolls
