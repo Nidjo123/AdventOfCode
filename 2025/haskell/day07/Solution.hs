@@ -18,8 +18,8 @@ readData s = State {origin = origin, splitters = splitters}
 moveDown :: Coord -> Coord
 moveDown (Coord x y) = Coord x (y + 1)
 
-solveDown :: [Coord] -> [Coord] -> Int -> Int -> Int
-solveDown splitters beams height splits = if height > maxHeight then splits else solveDown splitters newBeams (height + 1) (splits + length beamsToSplit)
+solve1 :: [Coord] -> [Coord] -> Int -> Int -> Int
+solve1 splitters beams height splits = if height > maxHeight then splits else solve1 splitters newBeams (height + 1) (splits + length beamsToSplit)
   where
     maxHeight = maximum $ map (\(Coord x y) -> y) splitters
     beamsToSplit = filter (\beam -> any (\splitter -> beam == splitter) splitters) beams 
@@ -27,12 +27,26 @@ solveDown splitters beams height splits = if height > maxHeight then splits else
     newSplitBeams = concat [[Coord (x - 1) y, Coord (x + 1) y] | (Coord x y) <- beamsToSplit]
     newBeams = map moveDown . nub $ unsplitBeams ++ newSplitBeams
 
-solve1 :: State -> Int
-solve1 State {origin, splitters} = solveDown splitters [origin] 0 0
+nextTimeline :: [(Int, Int)] -> [Coord] -> [(Int, Int)]
+nextTimeline timelines splitters = newTimelines
+  where
+    timelinesToSplit = concat $ map (\(Coord x _) -> case lookup x timelines of
+                                                     Just cnt -> [(x, cnt)]
+                                                     Nothing -> []) splitters
+    splitTimelines = concat $ map (\(x, cnt) -> [(x - 1, cnt), (x + 1, cnt)]) timelinesToSplit
+    newTimelines = map (\xs -> (fst . head $ xs, sum . map snd $ xs))
+                   $ groupBy (\(x1, _) (x2, _) -> x1 == x2)
+		   $ sortBy (\(x1, _) (x2, _) -> x1 `compare` x2)
+                   $ (timelines \\ timelinesToSplit) ++ splitTimelines
+
+solve2 :: [[Coord]] -> [(Int, Int)] -> Int
+solve2 splittersByHeight initTimelines = sum . map snd $ foldl' nextTimeline initTimelines splittersByHeight
 
 main = do
   contents <- getContents
   let 
-    state = readData contents
-  print $ solve1 state
+    State {origin=(Coord ox oy), splitters} = readData contents
+    splittersByHeight = groupBy (\(Coord _ y1) (Coord _ y2) -> y1 == y2) splitters
+  print $ solve1 splitters [Coord ox oy] 0 0
+  print $ solve2 splittersByHeight [(ox, 1)]
 
