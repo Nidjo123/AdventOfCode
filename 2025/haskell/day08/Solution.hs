@@ -37,6 +37,12 @@ connect circuits p q = if containsP == containsQ then circuits else concat (cont
     (containsP, noP) = partition (elem p) circuits
     (containsQ, noPnoQ) = partition (elem q) noP
 
+lastJunctionBoxes :: [[Id]] -> [(JunctionBox, JunctionBox)] -> Int
+lastJunctionBoxes circuits@[c1, c2] (((pId, (Point x1 _ _)), (qId,  (Point x2 _ _))):rest)
+  | (pId `elem` c1 && qId `elem` c2) || ( pId `elem` c2 && qId `elem` c1) = round x1 * round x2
+  | otherwise = lastJunctionBoxes (connect circuits pId qId) rest
+lastJunctionBoxes circuits (((pId, _), (qId, _)):rest) = lastJunctionBoxes (connect circuits pId qId) rest
+
 main = do
   contents <- getContents
   let 
@@ -46,3 +52,5 @@ main = do
     circuits1 = foldl' (\x (p, q) -> connect x p q) initCircuits $ map (\((pId, _), (qId, _)) -> (pId, qId)) $ take 1000 closestPairs 
     part1 = product . take 3 . reverse . sort . map length $ circuits1
   print part1
+  print $ lastJunctionBoxes initCircuits closestPairs
+
